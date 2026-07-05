@@ -1,0 +1,8 @@
+__pycache__/
+.env
+.venv
+venv/
+articles/*.md
+articles/state.json
+.git
+Optisigns_Take-Home_Test_Updated.md
