@@ -38,8 +38,9 @@ class S3StateSync(StateSync):
             self._s3.download_file(self._bucket, key, str(local_path))
             logger.debug("Downloaded %s", key)
         except ClientError as exc:
-            if exc.response["Error"]["Code"] == "404":
-                logger.info("No remote state file %s, starting fresh.", key)
+            code = exc.response["Error"]["Code"]
+            if code in ("404", "403"):
+                logger.info("No remote state file %s (%s), starting fresh.", key, code)
             else:
                 raise
 
@@ -63,16 +64,22 @@ class S3StateSync(StateSync):
             logger.info("Local file %s does not exist, skipping upload.", local_path)
             return
         key = f"{self._prefix}/{local_path.name}"
-        self._s3.upload_file(str(local_path), self._bucket, key)
-        logger.debug("Uploaded %s", key)
+        try:
+            self._s3.upload_file(str(local_path), self._bucket, key)
+            logger.debug("Uploaded %s", key)
+        except ClientError as exc:
+            logger.warning("Failed to upload %s: %s", key, exc)
 
     def _upload_directory(self, local_dir: Path) -> None:
         if not local_dir.exists():
             logger.info("Local directory %s does not exist, skipping upload.", local_dir)
             return
-        for local_path in local_dir.rglob("*"):
-            if local_path.is_file():
-                rel_path = local_path.relative_to(local_dir.parent)
-                key = f"{self._prefix}/{rel_path}"
-                self._s3.upload_file(str(local_path), self._bucket, key)
-                logger.debug("Uploaded %s", key)
+        try:
+            for local_path in local_dir.rglob("*"):
+                if local_path.is_file():
+                    rel_path = local_path.relative_to(local_dir.parent)
+                    key = f"{self._prefix}/{rel_path}"
+                    self._s3.upload_file(str(local_path), self._bucket, key)
+                    logger.debug("Uploaded %s", key)
+        except ClientError as exc:
+            logger.warning("Failed to upload directory %s: %s", local_dir.name, exc)
