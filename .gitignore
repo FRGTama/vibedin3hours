@@ -6,3 +6,5 @@ articles/*.md
 articles/state.json
 .git
 Optisigns_Take-Home_Test_Updated.md
+.DS_Store
+chroma_db/

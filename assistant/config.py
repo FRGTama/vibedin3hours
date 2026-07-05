@@ -45,7 +45,7 @@ class AssistantConfig:
     def from_env(cls) -> "AssistantConfig":
         return cls(
             gemini_api_key=_require("GEMINI_API_KEY"),
-            gemini_model=_optional("GEMINI_MODEL", "gemini-2.0-flash"),
+            gemini_model=_optional("GEMINI_MODEL", "gemini-2.5-flash-lite"),
             embedding_model=_optional("EMBEDDING_MODEL", "gemini-embedding-001"),
             chroma_db_path=Path(_optional("CHROMA_DB_PATH", "chroma_db")),
             chroma_collection=_optional("CHROMA_COLLECTION", "optisigns_docs"),

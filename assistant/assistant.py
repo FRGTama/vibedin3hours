@@ -39,7 +39,9 @@ class AssistantOrchestrator:
         chunks_added = 0
         chunks_updated = 0
         chunks_skipped = 0
+        all_changed_chunks: list[Chunk] = []
 
+        # Phase 1: identify all changed chunks without any API calls.
         for fp in file_paths:
             parsed = _parse_filename(fp.name)
             if parsed is None:
@@ -54,25 +56,25 @@ class AssistantOrchestrator:
                 continue
 
             existing_sha256s = self._vector_store.get_existing_sha256(article_id)
-            changed_chunks: list[Chunk] = []
             for chunk in new_chunks:
                 chunk_sha = _sha256(chunk.text)
                 old_sha = existing_sha256s.get(chunk.chunk_index)
                 if old_sha == chunk_sha:
                     chunks_skipped += 1
                 else:
-                    changed_chunks.append(chunk)
+                    all_changed_chunks.append(chunk)
                     if old_sha is None:
                         chunks_added += 1
                     else:
                         chunks_updated += 1
 
-            if changed_chunks:
-                texts = [c.text for c in changed_chunks]
-                embeddings = self._embedder.embed(texts)
-                self._vector_store.upsert(changed_chunks, embeddings)
-
             files_ingested += 1
+
+        # Phase 2: batch embed and upsert all changed chunks together.
+        if all_changed_chunks:
+            texts = [c.text for c in all_changed_chunks]
+            embeddings = self._embedder.embed(texts)
+            self._vector_store.upsert(all_changed_chunks, embeddings)
 
         logger.info(
             "Ingest complete: files=%d, added=%d, updated=%d, skipped=%d",

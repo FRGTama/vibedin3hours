@@ -33,19 +33,32 @@ pip install google-genai chromadb
 
 ## Usage
 
-### Ingest Articles & Query
+### Ingest Articles (run once or on schedule)
 
 ```bash
-python assistant/cli.py "How do I add a YouTube video?"
+python -m assistant.cli ingest
 ```
 
 This will:
 1. Read all `.md` files from `articles/`
 2. Chunk them recursively (headings → paragraphs → sentences)
-3. Generate embeddings via `gemini-embedding-001`
-4. Upsert into ChromaDB
-5. Query using `gemini-2.0-flash` + OptiBot system prompt
-6. Output JSON with answer and citations
+3. Detect changed chunks via SHA256 delta
+4. Generate embeddings via `gemini-embedding-001` (batched, 100 per request)
+5. Upsert into ChromaDB
+
+### Ask a Question
+
+```bash
+python -m assistant.cli ask "How do I add a YouTube video?"
+```
+
+This will:
+1. Embed only the question (1 API call)
+2. Query ChromaDB for top-5 relevant chunks
+3. Generate answer using `gemini-2.0-flash` + OptiBot system prompt
+4. Output JSON with answer and citations
+
+**Note:** Run `ingest` first to populate the vector store.
 
 ### JSON Output Example
 
