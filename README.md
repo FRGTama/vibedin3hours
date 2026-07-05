@@ -1,6 +1,6 @@
 # OptiBot
 
-Customer-support chatbot for OptiSigns.com. Scrapes support articles from Zendesk, builds a RAG knowledge base with Gemini embeddings + ChromaDB, and answers questions with cited article URLs.
+Customer-support chatbot. Scrapes support articles from Zendesk, builds a RAG knowledge base with Gemini embeddings + ChromaDB, and answers questions with cited article URLs.
 
 ## Setup
 
